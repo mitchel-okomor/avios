@@ -36,7 +36,6 @@ export class ProductsController{
 	@httpGet("/")
 	public async index(req: Request, res: Response){
 		const productRepo = await this.database.getRepository(ProductRepository);
-console.log("Fetching Products")
 		 const products = await productRepo.find();
 		 console.log("Products",  products);
 		return res.status(200).json(products);
