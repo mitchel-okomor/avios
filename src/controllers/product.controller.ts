@@ -7,6 +7,7 @@ import {DatabaseService} from "../services/database.service";
 import uplaod from "../middlewares/multer";
 import {Varieties} from "../core/types.core";
 import {unlinkFile} from "../utils/files";
+import {body as validBody, validationResult} from 'express-validator'
 
 
 interface CreateProductBody{
@@ -22,7 +23,7 @@ interface UpdateProductBody{
 }
 
 interface MulterRequest extends Request {
-    file: any;
+    files: any;
 }
 
 @controller("/products")
@@ -31,6 +32,7 @@ export class ProductsController{
 		@inject(TYPES.DatabaseService) private readonly database: DatabaseService
 	){}
 
+	//Get all products
 	@httpGet("/")
 	public async index(req: Request, res: Response){
 		const productRepo = await this.database.getRepository(ProductRepository);
@@ -40,31 +42,42 @@ console.log("Fetching Products")
 		return res.status(200).json(products);
 	}
 
+	//Get a single product
 	@httpGet("/:product")
 	public async show(@requestParam("productId") productId: number){
 		const productRepo = await this.database.getRepository(ProductRepository);
 		return productRepo.findOneOrFail(productId);
 	}
 
+	//Create a product
 	@httpPost("/", uplaod.array('images'))
 	public async create(
 		@requestBody() body: CreateProductBody, req: Request, res: Response
 	){
-		console.log("body: ", req.body)
-		console.log("file: ", (req as MulterRequest).file)
+		validBody('product_name').isLength({min: 3});
+		validBody('product_discription').isLength({min: 3})
+
+		const errors = validationResult(req);
+		if(!errors.isEmpty()){
+			return res.status(400).json({errors: errors.array()})
+		}
 
 		const repository = await this.database.getRepository(ProductRepository);
 		const product = new Product();
 		const {size, color, quantity,price } = req.body
-		const images = (req as MulterRequest).file?.filename;
-
+		const images = (req as MulterRequest).files;
+		//get only the image name
+const imagesURL = images.map((item)=>{
+return item.filename
+})
 		product.product_name = body.product_name;
 		product.product_description = body.product_description;
-		product.product_varieties = JSON.stringify([{size, color, quantity, images, price}]);
+		product.product_varieties = JSON.stringify([{size, color, quantity, images:imagesURL, price}]);
 		repository.save(product);
-		return res.sendStatus(201);
+		return res.sendStatus(201).json(product);
 	}
 
+	//update a product
 	@httpPut("/:productId")
 	public async update(
 		@requestBody() body: UpdateProductBody, @requestParam("productId") productId: number,
@@ -76,10 +89,11 @@ console.log("Fetching Products")
 		product.product_description = body.product_description;
 		product.product_varieties = body.product_varieties!;
 		await repository.save(product);
-		return res.sendStatus(204);
+		return res.sendStatus(204).json(product);
 	}
 
-	@httpPost("/variety/:productId", uplaod.single('images'))
+	//create a variety on a product
+	@httpPost("/variety/:productId", uplaod.array('images'))
 	public async addVariety(
 		@requestBody() body: Varieties, @requestParam("productId") productId: number,
 		req: Request, res: Response
@@ -87,14 +101,15 @@ console.log("Fetching Products")
 		const repository = await this.database.getRepository(ProductRepository);
 		const product = await repository.findOneOrFail(productId);
 		const {size, color, quantity,price } = req.body
-		const images = (req as MulterRequest).file?.filename;
+		const images = (req as MulterRequest).files;
 		console.log("variety", typeof product.product_varieties)
 		const parsedProduct = JSON.parse(product.product_varieties )
 		product.product_varieties = JSON.stringify([...parsedProduct, {size, color, quantity, images, price}]);
 		await repository.save(product);
-		return res.sendStatus(204);
+		return res.sendStatus(204).json(product);
 	}
 
+	//Edit a veriety 
 	@httpPut("/variety/:productId/:color", uplaod.single('images'))
 	public async updateVariety(
 		@requestBody() body: Varieties, @requestParam("productId") productId: number, @requestParam("color") color: string,
@@ -103,7 +118,6 @@ console.log("Fetching Products")
 		const repository = await this.database.getRepository(ProductRepository);
 		const product = await repository.findOneOrFail(productId);
 		const {size, quantity,price } = req.body
-		const images = (req as MulterRequest).file?.filename;
 		const parsedProduct = JSON.parse(product.product_varieties )
 		parsedProduct.map(variant => {
 			if(variant.color === color){
@@ -117,17 +131,16 @@ console.log("Fetching Products")
 					variant.price = price;
 				};
 
-			}	if(images && images !==[]){
-				variant.images = images;
-			}
+			}	
 
 			return variant;
 		});
 		product.product_varieties = JSON.stringify(parsedProduct);
 		await repository.save(product);
-		return res.sendStatus(204);
+		return res.sendStatus(204).json(product);
 	}
 
+	//Delete a product
 	@httpDelete("/:productId")
 	public async destroy(
 		@requestParam("productId") productId: number,
@@ -155,7 +168,7 @@ if(isImageDeleted){
 	const truncatedProducts =	parsedProducts.filter(variant => variant.color !== color);
 		products.product_varieties = JSON.stringify(truncatedProducts);
 		await repository.save(products);
-		return res.sendStatus(204);
+		return res.sendStatus(204)
 }
 	
 	}
