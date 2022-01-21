@@ -5,6 +5,13 @@ import {Logger} from '../services/logger.service'
 import { Product } from "../entities/product.entity";
 
 require('dotenv').config();
+const dbName:any = process.env.DB_NAME
+const dbHost:any = process.env.DB_HOST
+const dbPort:any = process.env.DB_PORT
+const dbPass:any = process.env.DB_PASS
+const dbUser:any = process.env.DB_USER
+const dbDialet:any = process.env.DB_DIALET
+
 
 
 @injectable()
@@ -18,12 +25,12 @@ public async getConnection(): Promise<Connection> {
 
 	try{
 		DatabaseService.connection = await createConnection({
-			type: "mysql",
-			host: "localhost",
-			port: 3306,
-			username: "root",
-			password: "password",
-			database: "avios",
+			type: dbDialet,
+			host: dbHost,
+			port: dbPort,
+			username: dbUser,
+			password: dbPass,
+			database: dbName,
 			entities: [
 				Product
 			],
