@@ -7,7 +7,7 @@
 		"test": "./node_modules/mocha/bin/mocha",
 		"dev": "nodemon",
 		"build": "rimraf ./dist && tsc",
-		"start": "npm run build && node dist/main.js -r dotenv/config",
+		"start": "npm run build && node dist/main.js",
 		"lint": "eslint . --ext .ts",
 		"lint-and-fix": "eslint . --ext .ts --fix"
 	},
