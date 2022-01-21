@@ -73,7 +73,7 @@ return item.filename
 		product.product_description = body.product_description;
 		product.product_varieties = JSON.stringify([{size, color, quantity, images:imagesURL, price}]);
 		repository.save(product);
-		return res.sendStatus(201).json(product);
+		return res.sendStatus(201).json({message:"Created successfully", product});
 	}
 
 	//update a product

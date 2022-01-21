@@ -1,4 +1,15 @@
-# Getting Started
+# Tech stack
+
+NodeJS
+Express
+MySQl
+inversify
+inversify-express-util
+
+# Design Pattern
+
+Dependency enjection
+Inversion of control
 
 ## Available Scripts
 
