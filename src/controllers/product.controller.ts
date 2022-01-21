@@ -136,7 +136,7 @@ return item.filename
 		});
 		product.product_varieties = JSON.stringify(parsedProduct);
 		await repository.save(product);
-		return res.sendStatus(204).json(product);
+		return res.sendStatus(204).json({message:"Updated successfully", product});
 	}
 
 	//Delete a product
@@ -149,7 +149,7 @@ return item.filename
 		const repository = await this.database.getRepository(ProductRepository);
 		const product = await repository.findOneOrFail(productId);
 		await repository.delete(product);
-		return res.sendStatus(204)
+		return res.sendStatus(204).json({message:"deleted successfully"})
 	}
 
 	@httpDelete("/variety/:productId/:color")
@@ -167,7 +167,7 @@ if(isImageDeleted){
 	const truncatedProducts =	parsedProducts.filter(variant => variant.color !== color);
 		products.product_varieties = JSON.stringify(truncatedProducts);
 		await repository.save(products);
-		return res.sendStatus(204)
+		return res.sendStatus(204).json({message:"deleted successfully"})
 }
 	
 	}
