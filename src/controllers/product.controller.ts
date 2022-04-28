@@ -8,6 +8,7 @@ import uplaod from "../middlewares/multer";
 import {Varieties} from "../core/types.core";
 import {unlinkFile} from "../utils/files";
 import {body as validBody, validationResult} from 'express-validator'
+import validate from "../middlewares/ValidateInputes";
 
 
 interface CreateProductBody{
@@ -49,17 +50,11 @@ export class ProductsController{
 	}
 
 	//Create a product
-	@httpPost("/", uplaod.array('images'))
+	@httpPost("/", validate, uplaod.array('images'))
 	public async create(
 		@requestBody() body: CreateProductBody, req: Request, res: Response
 	){
-		validBody('product_name').isLength({min: 3});
-		validBody('product_discription').isLength({min: 3})
-
-		const errors = validationResult(req);
-		if(!errors.isEmpty()){
-			return res.status(400).json({errors: errors.array()})
-		}
+	
 
 		const repository = await this.database.getRepository(ProductRepository);
 		const product = new Product();
